@@ -7,6 +7,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import axios from 'axios';
 import addDays from "date-fns/addDays";
 import Result from './Result';
+import Loading from './Loading';
 
 export type Plan = {
   plan_id: Key;
@@ -27,18 +28,29 @@ const Home = () => {
   const [departure, setDeparture] = React.useState<number>(1);
   const [duration, setDuration] = React.useState<number>(60);
   const [plans, setPlans] = React.useState<Plan[]>([]);
+  const [plansCount, setPlansCount] = React.useState<number | undefined>(undefined);
+  const [hasError, setHasError] = React.useState<boolean>(false);
+  const [loading, setLoading] = React.useState<boolean>(false);
 
   registerLocale('ja', ja);
   const onFormSubmit = async (event: { preventDefault:()=> void; }) => {
-    event.preventDefault();
+    try {
+      event.preventDefault();
+      // 非同期で通信している間だけローディング処理
+      setLoading(true);
 
-    const response = await axios.get('https://l1kwik11ne.execute-api.ap-northeast-1.amazonaws.com/production/golf-courses', {
-      params: { date: addDays(date, 14), budget: budget, departure: departure, duration: duration }
-    });
+      const response = await axios.get('https://l1kwik11ne.execute-api.ap-northeast-1.amazonaws.com/production/golf-courses', {
+        params: { date: addDays(date, 14), budget: budget, departure: departure, duration: duration }
+      });
 
-    setPlans(response.data.plans);
-    console.log(date, budget, departure, duration)
-    console.log(response);
+      setPlans(response.data.plans);
+      setPlansCount(response.data.plansCount);
+      // 処理が終わった時にローディングを解除
+      setLoading(false);
+    } catch(e) {
+      console.log(e);
+      setHasError(true);
+    }
   }
   return (
     <div className="ui container" id="container">
@@ -92,7 +104,8 @@ const Home = () => {
             </button>
           </div>
         </form>
-        <Result plans={plans} />
+        <Loading loading={loading}/>
+        <Result plans={plans} plansCount={plansCount} error={hasError}/>
       </div>
     </div>
   );
