@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Key } from 'react';
 import './Common.css';
 
 import DatePicker, { registerLocale } from "react-datepicker";
@@ -6,6 +6,19 @@ import ja from 'date-fns/locale/ja';
 import "react-datepicker/dist/react-datepicker.css";
 import axios from 'axios';
 import addDays from "date-fns/addDays";
+import Result from './Result';
+
+export type Plan = {
+  plan_id: Key;
+  image_url: string;course_name: string;
+  duration: string;
+  price: string;
+  evaluation: string;
+  prefecture: string;
+  plan_name: string;
+  caption: string;
+  reserve_url_pc: string;
+}
 
 const Home = () => {
   const Today = new Date();
@@ -13,6 +26,8 @@ const Home = () => {
   const [budget, setBudget] = React.useState<number>(8000);
   const [departure, setDeparture] = React.useState<number>(1);
   const [duration, setDuration] = React.useState<number>(60);
+  const [plans, setPlans] = React.useState<Plan[]>([]);
+
   registerLocale('ja', ja);
   const onFormSubmit = async (event: { preventDefault:()=> void; }) => {
     event.preventDefault();
@@ -21,6 +36,7 @@ const Home = () => {
       params: { date: addDays(date, 14), budget: budget, departure: departure, duration: duration }
     });
 
+    setPlans(response.data.plans);
     console.log(date, budget, departure, duration)
     console.log(response);
   }
@@ -30,7 +46,7 @@ const Home = () => {
         <form className="ui form segment" onSubmit={onFormSubmit}>
           <div className="field">
             <label><i className="calendar alternate outline icon"></i>プレー日</label>
-            <DatePicker 
+            <DatePicker
               dateFormat="yyyy/MM/dd"
               locale='ja'
               selected={date}
@@ -76,6 +92,7 @@ const Home = () => {
             </button>
           </div>
         </form>
+        <Result plans={plans} />
       </div>
     </div>
   );
